@@ -8,6 +8,8 @@ use pocketmine\plugin\PluginBase;
 use pocketmine\block\Block;
 use pocketmine\Server;
 use pocketminemine\level\Level;
+use pocketmine\math\Vector3;
+use pocketmine\level\Position
  use pocketmine\Player;
 
  public OWERWORLD;
@@ -27,13 +29,34 @@ class Main extends PluginBase implements Listener{
 				$netherlevel = $this->getOtherLevel($level);
 				$xmin = $x/8-20;
 				$ymin = $y-20;
-				$zmin = $z/8-20
+				$zmin = $z/8-20;
+				$isteleported = false;
 				for($xmin <= $x/8+20, $xmin++) {
 					for($ymin <= $y+20, $ymin++) {
 						for($zmin <= $z/8+20, $zmin++) {
-							
+							if($this->isPortal($xmin, $ymin, $zmin, $netherlevel) and $isteleported ===! true) {
+								$pz = $zmin;
+								$py = $ymin;
+								$px = $xmin;
+								$player->switchLevel($netherlevel);
+								$player->teleport(new Vector3($px, $py, $pz));
+								$isteleported = true;
+							}
 						}
 					}
+				} if($isteleported !=== true) {
+				$xmin = $x/8-3;
+				$ymin = $y;
+				$zmin = $z/8-3;
+					for($xmin <= $x/8+3, $xmin++) {
+						for($ymin <= $y+4, $ymin++) {
+							for($zmin <= $z/8+3, $zmin++) {
+								$netherlevel->setBlock(new Vector3($min, $ymin, $zmin), Block::get(BLOCK::AIR));
+							}
+						}
+					}
+					$player->switchLevel($netherlevel);
+					$player->teleport(new Vector3($x, $y, $z));
 				}
 			}
 		}
@@ -96,9 +119,4 @@ $this->getServer()->getPluginManager()->registerEvents($this, $this);
  }
 public function onLoad(){
 }
- public function onCommand(CommandSender $issuer, Command $cmd, $label, array $params){
-switch($cmd->getName()){
-}
-return false;
- }
 }
