@@ -9,7 +9,7 @@ use pocketmine\plugin\PluginBase;
 use pocketmine\block\Block;
 use pocketmine\Server;
 use pocketmine\item\FlintSteel;
-use pocketminemine\level\Level;
+use pocketmine\level\Level;
 use pocketmine\math\Vector3;
 use pocketmine\level\Position;
  use pocketmine\Player;
@@ -76,9 +76,9 @@ class Main extends PluginBase implements Listener{
 				$isteleported = false;
 				// Checking if there is already a portal in a 21*21*21 area
 				// if you dunno the nether is 8 times more small in the nether
-				for($xmin <= $x/8+10, $xmin++) {
-					for($ymin <= $y+10, $ymin++) {
-						for($zmin <= $z/8+10, $zmin++) {
+				for($xmin = $x/8-20; $xmin <= $x/8+10; $xmin++) {
+					for($ymin = $y-20; $ymin <= $y+10; $ymin++) {
+						for($zmin = $z/8-20; $zmin <= $z/8+10; $zmin++) {
 							// if a portal is found...
 							if($this->isPortal($xmin, $ymin, $zmin, $netherlevel) and $isteleported ===! true) {
 								$pz = $zmin;
@@ -93,20 +93,20 @@ class Main extends PluginBase implements Listener{
 					}
 				} 
 				// if no portal is found
-				if($isteleported !=== true) {
+				if($isteleported ===! true) {
 				$xmin = $x/8-3;
 				$ymin = $y;
 				$zmin = $z/8-3;
 				//  Clearing the area
-					for($xmin <= $x/8+3, $xmin++) {
-						for($ymin <= $y+4, $ymin++) {
-							for($zmin <= $z/8+3, $zmin++) {
+					for($xmin = $x/8-3; $xmin <= $x/8+3; $xmin++) {
+						for($ymin = $y; $ymin <= $y+4; $ymin++) {
+							for($ymin = $y; $zmin <= $z/8+3; $zmin++) {
 								$netherlevel->setBlock(new Vector3($min, $ymin, $zmin), Block::get(BLOCK::AIR));
 							}
 						}
 					}
 					// creating a portal
-					$this->createPortal($netherlevel, new Vector3($x/8, $y, $z/8))
+					$this->createPortal($netherlevel, new Vector3($x/8, $y, $z/8));
 					$player->switchLevel($netherlevel);
 					$player->teleport(new Vector3($x/8, $y, $z/8));
 				}
@@ -120,9 +120,9 @@ class Main extends PluginBase implements Listener{
 				$isteleported = false;
 				// Checking if there is already a portal in a 21*21*21 area
 				// if you dunno the nether is 8 times more small in the nether
-				for($xmin <= $x*8+10, $xmin++) {
-					for($ymin <= $y+10, $ymin++) {
-						for($zmin <= $z*8+10, $zmin++) {
+				for($xmin = $x*8-20; $xmin <= $x*8+10; $xmin++) {
+					for($ymin = $y-20; $ymin <= $y+10; $ymin++) {
+						for($zmin = $z*8-20; $zmin <= $z*8+10; $zmin++) {
 							// if a portal is found...
 							if($this->isPortal($xmin, $ymin, $zmin, $overlevel) and $isteleported ===! true) {
 								$pz = $zmin;
@@ -137,20 +137,20 @@ class Main extends PluginBase implements Listener{
 					}
 				} 
 				// if no portal is found
-				if($isteleported !=== true) {
+				if($isteleported ===! true) {
 				$xmin = $x*8-3;
 				$ymin = $y;
 				$zmin = $z*8-3;
 				//  Clearing the area
-					for($xmin <= $x*8+3, $xmin++) {
-						for($ymin <= $y+4, $ymin++) {
-							for($zmin <= $z*8+3, $zmin++) {
+					for($xmin = $x*8-3; $xmin <= $x*8+3; $xmin++) {
+						for($ymin = $y; $ymin <= $y+4; $ymin++) {
+							for($zmin = $z*8-3; $zmin <= $z*8+3; $zmin++) {
 								$overlevel->setBlock(new Vector3($min, $ymin, $zmin), Block::get(BLOCK::AIR));
 							}
 						}
 					}
 					// creating a portal
-					$this->createPortal($overlevel, new Vector3($x*8, $y, $z*8))
+					$this->createPortal($overlevel, new Vector3($x*8, $y, $z*8));
 					$player->switchLevel($overlevel);
 					$player->teleport(new Vector3($x*8, $y, $z*8));
 				}
@@ -208,7 +208,7 @@ class Main extends PluginBase implements Listener{
 			 }
 	}
 	public function isPortal($x, $y, $z, Level $level) {
-		if(new Postion($x, $y, $z, $level) === Block::get(BLOCK::PORTAL)) {
+		if(new Position($x, $y, $z, $level) === Block::get(BLOCK::PORTAL)) {
 			return true;
 		} else  {
 			return false;
@@ -246,6 +246,9 @@ class Main extends PluginBase implements Listener{
 public function onEnable(){
 $this->getServer()->getPluginManager()->registerEvents($this, $this);
  }
-public function onLoad(){
+public function onCommand(CommandSender $sender, Command $cmd, $label, array $args){
+	switch(strtolower($cmd->getName())) {
+		
+	}
 }
 }
