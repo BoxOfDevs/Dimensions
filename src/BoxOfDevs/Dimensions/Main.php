@@ -7,6 +7,7 @@ use pocketmine\event\player\PlayerMoveEvent;
 use pocketmine\plugin\PluginBase;
 use pocketmine\block\Block;
 use pocketmine\Server;
+use pocketminemine\level\Level;
  use pocketmine\Player;
 
  public OWERWORLD;
@@ -17,17 +18,65 @@ use pocketmine\Server;
 class Main extends PluginBase implements Listener{
 	public function onMove(PlayerMoveEvent $event) {
 		$player = $event->getPlayer();
+		if($this->isInPortal($player)) {
+			$x = $player->x;
+			$y = $player->y;
+			$z = $player->z;
+			$level = $player->getLevel();
+			if($this->getWorldType($level) === self::OVERWORLD) {
+				$netherlevel = $this->getOtherLevel($level);
+				$xmin = $x/8-20;
+				$ymin = $y-20;
+				$zmin = $z/8-20
+				for($xmin <= $x/8+20, $xmin++) {
+					for($ymin <= $y+20, $ymin++) {
+						for($zmin <= $z/8+20, $zmin++) {
+							
+						}
+					}
+				}
+			}
+		}
+	}
+	public function getOtherLevel(Level $level) {
+			 $cfg = new Config($this->getServer()->getWorldFolder() . "dimensions.yml", Config::YAML);
+			 $levelinfo = $cfg->get($level->getName());
+			 $netherlevel = $this->getServer()->getLevelByName($levelinfo[1]);
+			 if($netherlevel instanceof Level) {
+				 return $netherlevel;
+			 } else {
+				 switch($this->getWorldType($level)) {
+					 case self::OVERWORLD:
+					    return $this->getServer()->getLevelByName($cfg->get("DefaultNether"));
+						break;
+					 case self::NETHER:
+					    return $this->getServer()->getLevelByName($cfg->get("DefaultOverworld"));
+						break;
+				 }
+			 }
+	}
+	public function isPortal($x, $y, $z, Level $level) {
+		if(new Postion($x, $y, $z, $level) === Block::get(BLOCK::PORTAL)) {
+			return true;
+		} else  {
+			return false;
+		}
+	}
+	public function isInPortal(Player $player) {
 		$x = $player->x;
 		$y = $player->y;
 		$z = $player->z;
 		$level = $player->getLevel();
-		if(new Postion($x, $y, $z, $level) === Block::get(BLOCK::PORTAL)) {
+		if($this->isPortal($x, $y, $z, $level)) {
+			return true;
+		} else {
+			return false;
 		}
 	}
 	public function getWorldType(Level $level) {
 			 $cfg = new Config($this->getServer()->getWorldFolder() . "dimensions.yml", Config::YAML);
 			 $leveltype = $cfg->get($level->getName());
-			 switch($leveltype) {
+			 switch($leveltype[0]) {
 				 case "overworld":
 				 return self::OVERWORLD;
 				 break;
