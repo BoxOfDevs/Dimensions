@@ -4,6 +4,12 @@ author:  BoxOfDevs
 version: 1.0
 api: [2.0.0]
 main: BoxOfDevs\Dimensions\Main
-commands: []
-permissions: []
+commands: 
+   switchdimension:
+       description: "switch of dimension!"
+       usage: "/switchdimension"
+       permission: dimensions.command
+permissions: 
+   dimensions.command:
+      default: op
 ...

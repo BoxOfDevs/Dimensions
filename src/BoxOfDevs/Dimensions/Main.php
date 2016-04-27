@@ -4,11 +4,15 @@ use pocketmine\command\CommandSender;
 use pocketmine\command\Command;
 use pocketmine\event\Listener;
 use pocketmine\event\player\PlayerMoveEvent;
+use pocketmine\event\player\PlayerJoinEvent;
 use pocketmine\event\block\BlockPlaceEvent;
 use pocketmine\plugin\PluginBase;
 use pocketmine\block\Block;
 use pocketmine\Server;
 use pocketmine\item\FlintSteel;
+use pocketmine\entity\Human;
+use pocketmine\network\protocol\SetTimePacket;
+use pocketmine\network\protocol\ChangeDimensionPacket;
 use pocketmine\level\Level;
 use pocketmine\math\Vector3;
 use pocketmine\level\Position;
@@ -19,6 +23,9 @@ class Main extends PluginBase implements Listener{
  const NETHER = "nether";
  const UNKNOWN = "?";
  // const END;
+    public function onJoin(PlayerJoinEvent $event) {
+		$this->players[$event->getPlayer()->getName()] = "overworld";
+	}
     public function onPlace(BlockPlaceEvent $event) {
 		if($event->getItem() instanceof FlintSteel) {
 			$x = $event->getBlock()->getX();
@@ -61,101 +68,42 @@ class Main extends PluginBase implements Listener{
 	}
 	public function onMove(PlayerMoveEvent $event) {
 		$player = $event->getPlayer();
-		// if the player pass thouth the portal
-		if($this->isInPortal($player)) {
 			$x = $player->x;
 			$y = $player->y;
 			$z = $player->z;
+		$block = $player->getLevel()->getBlock(new Vector3($x, $y, $z));
+		// if the player pass thouth the portal
+		if($block->getId() === 90 or $block->getId() = 90 and $block->getDamage() = 1) {
 			$level = $player->getLevel();
-			// if the player is in the overworld
-			if($this->getWorldType($level) === self::OVERWORLD) {
-				$netherlevel = $this->getOtherLevel($level);
-				$xmin = $x/8-20;
-				$ymin = $y-20;
-				$zmin = $z/8-20;
-				$isteleported = false;
-				// Checking if there is already a portal in a 21*21*21 area
-				// if you dunno the nether is 8 times more small in the nether
-				for($xmin = $x/8-20; $xmin <= $x/8+10; $xmin++) {
-					for($ymin = $y-20; $ymin <= $y+10; $ymin++) {
-						for($zmin = $z/8-20; $zmin <= $z/8+10; $zmin++) {
-							// if a portal is found...
-							if($this->isPortal($xmin, $ymin, $zmin, $netherlevel) and $isteleported ===! true) {
-								$pz = $zmin;
-								$py = $ymin;
-								$px = $xmin;
-								// teleporting the player thouth the portal
-								$player->switchLevel($netherlevel);
-								$player->teleport(new Vector3($px, $py, $pz));
-								$isteleported = true;
-							}
-						}
-					}
-				} 
-				// if no portal is found
-				if($isteleported ===! true) {
-				$xmin = $x/8-3;
-				$ymin = $y;
-				$zmin = $z/8-3;
-				//  Clearing the area
-					for($xmin = $x/8-3; $xmin <= $x/8+3; $xmin++) {
-						for($ymin = $y; $ymin <= $y+4; $ymin++) {
-							for($ymin = $y; $zmin <= $z/8+3; $zmin++) {
-								$netherlevel->setBlock(new Vector3($min, $ymin, $zmin), Block::get(BLOCK::AIR));
-							}
-						}
-					}
-					// creating a portal
-					$this->createPortal($netherlevel, new Vector3($x/8, $y, $z/8));
-					$player->switchLevel($netherlevel);
-					$player->teleport(new Vector3($x/8, $y, $z/8));
+			if($this->players[$player->getName()] === "overworld") {
+				$this->switchLevel($player, $this->getServer()->getLevelByName("nether"));
+				for($xmin = $x - 5; $xmin <= $x + 5; $xmin++) {
+					for($ymin = $x - 5; $ymin <= $y + 5; $ymin++) {
+					   for($zmin = $z - 5; $zmin <= $z + 5; $zmin++) {
+					       $this->getServer()->getLevelByName("nether")->setBlock(new Vector3($xmin, $ymin, $zmin), Block::get(Block::AIR));
+				        }
+				    }
 				}
-			}
-			
-		elseif($this->getWorldType($level) === self::NETHER) {
-				$overlevel = $this->getOtherLevel($level);
-				$xmin = $x*8-20;
-				$ymin = $y-20;
-				$zmin = $z*8-20;
-				$isteleported = false;
-				// Checking if there is already a portal in a 21*21*21 area
-				// if you dunno the nether is 8 times more small in the nether
-				for($xmin = $x*8-20; $xmin <= $x*8+10; $xmin++) {
-					for($ymin = $y-20; $ymin <= $y+10; $ymin++) {
-						for($zmin = $z*8-20; $zmin <= $z*8+10; $zmin++) {
-							// if a portal is found...
-							if($this->isPortal($xmin, $ymin, $zmin, $overlevel) and $isteleported ===! true) {
-								$pz = $zmin;
-								$py = $ymin;
-								$px = $xmin;
-								// teleporting the player thouth the portal
-								$player->switchLevel($overlevel);
-								$player->teleport(new Vector3($px, $py, $pz));
-								$isteleported = true;
-							}
-						}
-					}
-				} 
-				// if no portal is found
-				if($isteleported ===! true) {
-				$xmin = $x*8-3;
-				$ymin = $y;
-				$zmin = $z*8-3;
-				//  Clearing the area
-					for($xmin = $x*8-3; $xmin <= $x*8+3; $xmin++) {
-						for($ymin = $y; $ymin <= $y+4; $ymin++) {
-							for($zmin = $z*8-3; $zmin <= $z*8+3; $zmin++) {
-								$overlevel->setBlock(new Vector3($min, $ymin, $zmin), Block::get(BLOCK::AIR));
-							}
-						}
-					}
-					// creating a portal
-					$this->createPortal($overlevel, new Vector3($x*8, $y, $z*8));
-					$player->switchLevel($overlevel);
-					$player->teleport(new Vector3($x*8, $y, $z*8));
+				$this->createPortal($this->getServer()->getLevelByName("nether"), new Vector3($x, $y, $z - 2));
+				$player->teleport(new Vector3($x, $y, $z));
+				$player->sendMessage("Switching to the nether...");
+				$this->players[$player->getName()] = "nether";
+			} elseif($this->players[$player->getName()] === "nether") {
+				$player->sendMessage("You're in the nether");
+				$this->switchLevel($player, $this->getServer()->getDefaultLevel());
+				for($xmin = $x - 5; $xmin <= $x + 5; $xmin++) {
+					for($ymin = $y; $ymin <= $y + 5; $ymin++) {
+					   for($zmin = $z - 5; $zmin <= $z + 5; $zmin++) {
+					       $this->getServer()->getDefaultLevel()->setBlock(new Vector3($xmin, $ymin, $zmin), Block::get(Block::AIR));
+				        }
+				    }
 				}
+				$this->createPortal($this->getServer()->getDefaultLevel(), new Vector3($x, $y, $z - 2));
+				$player->teleport(new Vector3($x, $y, $z));
+				$this->players[$player->getName()] = "overworld";
+				$player->sendMessage("Switching to the overworld...");
 			}
-		}
+	}
 	}
 	public function createPortal(Level $level, Vector3 $pos) {
 		$x = $pos->x;
@@ -207,8 +155,8 @@ class Main extends PluginBase implements Listener{
 				 }
 			 }
 	}
-	public function isPortal($x, $y, $z, Level $level) {
-		if(new Position($x, $y, $z, $level) === Block::get(BLOCK::PORTAL)) {
+	public function isPortal(Vector3 $pos, Level $level) {
+		if($level->getBlock($pos) === Block::get(BLOCK::AIR)) {
 			return true;
 		} else  {
 			return false;
@@ -219,7 +167,7 @@ class Main extends PluginBase implements Listener{
 		$y = $player->y;
 		$z = $player->z;
 		$level = $player->getLevel();
-		if($this->isPortal($x, $y, $z, $level)) {
+		if($this->isPortal(new Vector3($x, $y, $z), $level)) {
 			return true;
 		} else {
 			return false;
@@ -245,10 +193,56 @@ class Main extends PluginBase implements Listener{
 	}
 public function onEnable(){
 $this->getServer()->getPluginManager()->registerEvents($this, $this);
+$this->players = [];
  }
 public function onCommand(CommandSender $sender, Command $cmd, $label, array $args){
 	switch(strtolower($cmd->getName())) {
-		
+		case "switchdimension":
+			$x = $sender->x;
+			$y = $sender->y;
+			$z = $sender->z;
+			$xmin = $x - 5;
+			$ymi = $sender->y;
+			$z = $sender->z;
+			if($this->players[$sender->getName()] === "overworld") {
+				$this->switchLevel($sender, $this->getServer()->getLevelByName("nether"));
+				for($xmin = $x - 5; $xmin <= $x + 5; $xmin++) {
+					for($ymin = $x - 5; $ymin <= $y + 5; $ymin++) {
+					   for($zmin = $z - 5; $zmin <= $z + 5; $zmin++) {
+					       $this->getServer()->getLevelByName("nether")->setBlock(new Vector3($xmin, $ymin, $zmin), Block::get(Block::AIR));
+				        }
+				    }
+				}
+				for($xmin = $x - 5; $xmin <= $x + 5; $xmin++) {
+					   for($zmin = $z - 5; $zmin <= $z + 5; $zmin++) {
+							   $this->getServer()->getLevelByName("nether")->setBlock(new Vector3($xmin, $y - 2, $zmin), Block::get(Block::OBSIDIAN));
+				        }
+				}
+				$sender->teleport(new Vector3($x, $y, $z));
+				$sender->sendMessage("Switching to the nether...");
+				$this->players[$sender->getName()] = "nether";
+			} elseif($this->players[$sender->getName()] === "nether") {
+				$this->switchLevel($sender, $this->getServer()->getDefaultLevel());
+				for($xmin = $x - 5; $xmin <= $x + 5; $xmin++) {
+					for($ymin = $y; $ymin <= $y + 5; $ymin++) {
+					   for($zmin = $z - 5; $zmin <= $z + 5; $zmin++) {
+					       $this->getServer()->getDefaultLevel()->setBlock(new Vector3($xmin, $ymin, $zmin), Block::get(Block::AIR));
+				        }
+				    }
+				}
+				for($xmin = $x - 5; $xmin <= $x + 5; $xmin++) {
+					   for($zmin = $z - 5; $zmin <= $z + 5; $zmin++) {
+							   $this->getServer()->getDefaultLevel()->setBlock(new Vector3($xmin, $y - 2, $zmin), Block::get(Block::OBSIDIAN));
+				        }
+				}
+				$sender->teleport(new Vector3($x, $y, $z));
+				$this->players[$sender->getName()] = "overworld";
+				$sender->sendMessage("Switching to the overworld...");
+			}
 	}
 }
+public function switchLevel(Player $player, Level $targetLevel){
+		$oldLevel = $player->getLevel();
+		$player->teleport($targetLevel->getSafeSpawn());
+	}
 }
