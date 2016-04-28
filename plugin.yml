@@ -5,6 +5,8 @@ version: 1.0
 api: [2.0.0]
 main: BoxOfDevs\Dimensions\Main
 commands: 
-   switchdimension: []
+   createportal:
+       description: "Ingnite the portal that you are on"
+       usage: "/createportal"
 permissions: []
 ...

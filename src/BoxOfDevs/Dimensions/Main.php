@@ -5,7 +5,7 @@ use pocketmine\command\Command;
 use pocketmine\event\Listener;
 use pocketmine\event\player\PlayerMoveEvent;
 use pocketmine\event\player\PlayerJoinEvent;
-use pocketmine\event\block\BlockPlaceEvent;
+use pocketmine\event\player\PlayerInteractEvent;
 use pocketmine\plugin\PluginBase;
 use pocketmine\block\Block;
 use pocketmine\Server;
@@ -26,44 +26,79 @@ class Main extends PluginBase implements Listener{
     public function onJoin(PlayerJoinEvent $event) {
 		$this->players[$event->getPlayer()->getName()] = "overworld";
 	}
-    public function onPlace(BlockPlaceEvent $event) {
+	
+    public function onInteract(PlayerInteractEvent $event) {
 		if($event->getItem() instanceof FlintSteel) {
-			$x = $event->getBlock()->getX();
-			$y = $event->getBlock()->getY();
-			$Z = $event->getBlock()->getZ();
-				if(new Vector3($x, $y-1, $z) === Block::get(49, 0) and new Vector3($x-1, $y-1, $z) === Block::get(49, 0) and new Vector3($x+1, $y, $z) === Block::get(49, 0) and new Vector3($x+1, $y+1, $z) === Block::get(49, 0) and new Vector3($x+1, $y+2, $z) === Block::get(49, 0) and new Vector3($x+1, $y+3, $z) === Block::get(49, 0) and new Vector3($x+1, $y+4, $z) === Block::get(49, 0) and new Vector3($x-2, $y, $z) === Block::get(49, 0) and new Vector3($x-2, $y+1, $z) === Block::get(49, 0) and new Vector3($x-2, $y+2, $z) === Block::get(49, 0) and new Vector3($x-2, $y+3, $z) === Block::get(49, 0) and new Vector3($x-2, $y+4, $z) === Block::get(49, 0) )  {
-					if (new Vector3($x, $y+4, $z) === Block::get(49, 0) and new Vector3($x-1, $y+4, $z) === Block::get(49, 0) and new Vector3($x-2, $y+4, $z) === Block::get(49, 0) and new Vector3($x+1, $y+4, $z) === Block::get(49, 0)) {
-						$level->setBlock(new Vector3($x, $y, $z), Block::get(90, 0));
-						$level->setBlock(new Vector3($x-1, $y, $z), Block::get(90, 0));
-						$level->setBlock(new Vector3($x, $y+1, $z), Block::get(90, 0));
-						$level->setBlock(new Vector3($x-1, $y+1, $z), Block::get(90, 0));
-						$level->setBlock(new Vector3($x, $y+2, $z), Block::get(90, 0));
-						$level->setBlock(new Vector3($x-1, $y+2, $z), Block::get(90, 0));
-				}
-				if(new Vector3($x, $y-1, $z) === Block::get(49, 0) 
-					and new Vector3($x, $y-1, $z-1) === Block::get(49, 0) 
-				    and new Vector3($x, $y-1, $z-2) === Block::get(49, 0) 
-					and new Vector3($x, $y-1, $z+1) === Block::get(49, 0) 
-					and new Vector3($x, $y, $z+1) === Block::get(49, 0) 
-					and new Vector3($x, $y+1, $z+1) === Block::get(49, 0) 
-					and new Vector3($x, $y+2, $z+1) === Block::get(49, 0) 
-					and new Vector3($x, $y+3, $z+1) === Block::get(49, 0)
-					and new Vector3($x, $y, $z-2) === Block::get(49, 0) 
-					and new Vector3($x, $y+1, $z-2) === Block::get(49, 0) 
-					and new Vector3($x, $y+2, $z-2) === Block::get(49, 0) 
-					and new Vector3($x, $y+3, $z-2) === Block::get(49, 0)
-					and new Vector3($x, $y+4, $z) === Block::get(49, 0) 
-					and new Vector3($x, $y+4, $z-1) === Block::get(49, 0) 
-				    and new Vector3($x, $y+4, $z-2) === Block::get(49, 0) 
-					and new Vector3($x, $y+4, $z+1) === Block::get(49, 0))  {
-						$level->setBlock(new Vector3($x, $y, $z), Block::get(90, 0));
-						$level->setBlock(new Vector3($x, $y, $z-1), Block::get(90, 0));
-						$level->setBlock(new Vector3($x, $y+1, $z), Block::get(90, 0));
-						$level->setBlock(new Vector3($x, $y+1, $z-1), Block::get(90, 0));
-						$level->setBlock(new Vector3($x, $y+2, $z), Block::get(90, 0));
-						$level->setBlock(new Vector3($x, $y+2, $z-1), Block::get(90, 0));
-				}
+			if ($event->getBlock()->getId() === 49) {
+                    $poses = $this->getPoses($event->getBlock());
+					$level = $event->getPlayer()->getLevel();
+					$start = $poses[0];
+                    if ($start ===! $end) {
+						$xmin = $start->x;
+						$ymin = $start->y;
+						$zmin = $start->z;
+						$x = $end->x;
+						$y = $end->y;
+						$z = $end->z;
+						for($xmin = $start->x; $xmin <= $x; $xmin++) {
+							for($ymin = $start->y; $ymin <= $y; $ymin++) {
+								for($z = $end->z; $zmin <= $z; $zmin++) {
+									if($level->getBlock(new Vector3($x, $y, $z))->getId() === 0) {
+										$level->setBlock(new Vector3($xmin, $ymin, $zmin), Block::get(90, 0));
+									}
+								}
+							}
+						}
+					}
 			}
+		}
+	}
+	private function getPoses(Block $block){
+        $start = new Vector3($block->getX(), $block->getY(), $block->getZ());
+        $end = new Vector3($block->getX(), $block->getY(), $block->getZ());
+
+        $i = $block->getId();
+        $nottested = [$block];
+        $tested = [];
+        while(!empty($nottested)){
+            /** @var Block $block */
+            $block = array_pop($nottested);
+            if($block->getId() === $i){
+                if($block->getX() > $end->getX()) {$end->x = $block->getX();}
+			    if($block->getY() > $end->getY()) {$end->y = $block->getY();}
+                if($block->getZ() > $end->getZ()) {$end->z = $block->getZ();}
+
+                if($block->getX() < $start->getX()) {$start->x = $block->getX();}
+			    if($block->getY() < $start->getY()) {$start->y = $block->getY();}
+                if($block->getZ() < $start->getZ()) {$start->z = $block->getZ();}
+
+                $next = $block->getLevel()->getBlock($block->add(1));
+                if(!in_array($next, $tested)) {$nottested[] = $next;}
+
+                $next = $block->getLevel()->getBlock($block->add(-1));
+			    if(!in_array($next, $tested)) {$nottested[] = $next;}
+
+                $next = $block->getLevel()->getBlock($block->add(0, 1));
+			    if(!in_array($next, $tested)) {$nottested[] = $next;}
+
+                $next = $block->getLevel()->getBlock($block->add(0, -1));
+                if(!in_array($next, $tested)) {$nottested[] = $next;}
+
+                $next = $block->getLevel()->getBlock($block->add(0, 0, 1));
+			    if(!in_array($next, $tested)) {$nottested[] = $next;}
+
+                $next = $block->getLevel()->getBlock($block->add(0, 0, -1));
+                if(!in_array($next, $tested)) {$nottested[] = $next;}
+                $tested[] = $block;
+            }
+        }
+        return [$start, $end];
+    }
+	public function isObsidian(Vector3 $pos, Level $level) {
+		if($level->getBlock($pos)->getId() === 49) {
+			return true;
+		} else  {
+			return false;
 		}
 	}
 	public function onMove(PlayerMoveEvent $event) {
@@ -77,30 +112,69 @@ class Main extends PluginBase implements Listener{
 			$level = $player->getLevel();
 			if($this->players[$player->getName()] === "overworld") {
 				$this->switchLevel($player, $this->getServer()->getLevelByName("nether"));
+				$newPortal = true;
+				for($xmin = $x - 45; $xmin <= $x + 45; $xmin++) {
+					for($ymin = $y - 45; $ymin <= $y + 45; $ymin++) {
+					   for($zmin = $z - 5; $zmin <= $z + 5; $zmin++) {
+					      if($this->getServer()->getDefaultLevel()->getBlock(new Vector3($x, $y, $z))->getId() === 90) {
+							  $xtp = $xmin;
+							  $ytp = $ymin;
+							  $ztp = $zmin;
+							  $newPortal = false;
+						  }
+				        }
+				    }
+				}
+				if($newPortal ===! false) {
+					$xtp = $x;
+					$ytp = $y;
+					$ztp = $z;
 				for($xmin = $x - 5; $xmin <= $x + 5; $xmin++) {
-					for($ymin = $x - 5; $ymin <= $y + 5; $ymin++) {
+					for($ymin = $y - 5; $ymin <= $y + 5; $ymin++) {
 					   for($zmin = $z - 5; $zmin <= $z + 5; $zmin++) {
 					       $this->getServer()->getLevelByName("nether")->setBlock(new Vector3($xmin, $ymin, $zmin), Block::get(Block::AIR));
 				        }
 				    }
 				}
 				$player->teleport(new Vector3($x, $y, $z));
+				$this->createPortal($this->getServer()->getLevelByName("nether"), new Vector3($x - 2, $y, $z));
+				} else {
+				$player->teleport(new Vector3($xtp, $ytp, $ztp));
+				}
 				$player->sendMessage("Switching to the nether...");
 				$this->players[$player->getName()] = "nether";
-				$this->createPortal($this->getServer()->getLevelByName("nether"), new Vector3($x - 2, $y, $z));
 			} elseif($this->players[$player->getName()] === "nether") {
 				$this->switchLevel($player, $this->getServer()->getDefaultLevel());
-				for($xmin = $x - 5; $xmin <= $x + 5; $xmin++) {
-					for($ymin = $y; $ymin <= $y + 5; $ymin++) {
+				for($xmin = $x - 45; $xmin <= $x + 45; $xmin++) {
+					for($ymin = $y - 45; $ymin <= $y + 45; $ymin++) {
 					   for($zmin = $z - 5; $zmin <= $z + 5; $zmin++) {
+					      if($this->getServer()->getDefaultLevel()->getBlock(new Vector3($x, $y, $z))->getId() === 90) {
+							  $xtp = $xmin;
+							  $ytp = $ymin;
+							  $ztp = $zmin;
+							  $newPortal = false;
+						  }
+				        }
+				    }
+				}
+				if($newPortal ===! false) {
+					$xtp = $x;
+					$ytp = $y;
+					$ztp = $z;
+				for($xmin = $xtp - 5; $xmin <= $xtp + 5; $xmin++) {
+					for($ymin = $ytp; $ymin <= $ytp + 5; $ymin++) {
+					   for($zmin = $ztp - 5; $zmin <= $ztp + 5; $zmin++) {
 					       $this->getServer()->getDefaultLevel()->setBlock(new Vector3($xmin, $ymin, $zmin), Block::get(Block::AIR));
 				        }
 				    }
 				}
 				$player->teleport(new Vector3($x, $y, $z));
+				$this->createPortal($this->getServer()->getDefaultLevel(), new Vector3($x, $y, $z - 2));
+				} else {
+				$player->teleport(new Vector3($xtp, $ytp, $ztp));
+				}
 				$this->players[$player->getName()] = "overworld";
 				$player->sendMessage("Switching to the overworld...");
-				$this->createPortal($this->getServer()->getDefaultLevel(), new Vector3($x, $y, $z - 2));
 			}
 	}
 	}
@@ -152,7 +226,7 @@ class Main extends PluginBase implements Listener{
 			 }
 	}
 	public function isPortal(Vector3 $pos, Level $level) {
-		if($level->getBlock($pos) === Block::get(BLOCK::AIR)) {
+		if($level->getBlock($pos)->getId() === 90) {
 			return true;
 		} else  {
 			return false;
@@ -194,5 +268,53 @@ $this->players = [];
 public function switchLevel(Player $player, Level $targetLevel){
 		$oldLevel = $player->getLevel();
 		$player->teleport($targetLevel->getSafeSpawn());
+	}
+	public function onCommand(CommandSender $sender, Command $command, $label, array $args){
+    switch($command->getName()){
+		case "createportal":
+		$x = round($sender->x, 0);
+		$y = round($sender->y, 0);
+		$z = round($sender->z, 0);
+		$level = $sender->getLevel();
+		if($this->isObsidian(new Vector3($x, $y-1, $z), $level) and $this->isObsidian(new Vector3($x-1, $y-1, $z), $level) and $this->isObsidian(new Vector3($x+1, $y, $z), $level) and $this->isObsidian(new Vector3($x+1, $y+1, $z), $level) and $this->isObsidian(new Vector3($x+1, $y+2, $z), $level) and $this->isObsidian(new Vector3($x+1, $y+3, $z), $level) and $this->isObsidian(new Vector3($x+1, $y+4, $z), $level) and $this->isObsidian(new Vector3($x-2, $y, $z), $level) and $this->isObsidian(new Vector3($x-2, $y+1, $z), $level) and $this->isObsidian(new Vector3($x-2, $y+2, $z), $level) and $this->isObsidian(new Vector3($x-2, $y+3, $z), $level) and $this->isObsidian(new Vector3($x-2, $y+4, $z), $level) )  {
+					if ($this->isObsidian(new Vector3($x, $y+4, $z), $level) and $this->isObsidian(new Vector3($x-1, $y+4, $z), $level) and $this->isObsidian(new Vector3($x-2, $y+4, $z), $level) and $this->isObsidian(new Vector3($x+1, $y+4, $z), $level)) {
+						$level->setBlock(new Vector3($x, $y, $z), Block::get(90, 0));
+						$level->setBlock(new Vector3($x-1, $y, $z), Block::get(90, 0));
+						$level->setBlock(new Vector3($x, $y+1, $z), Block::get(90, 0));
+						$level->setBlock(new Vector3($x-1, $y+1, $z), Block::get(90, 0));
+						$level->setBlock(new Vector3($x, $y+2, $z), Block::get(90, 0));
+						$level->setBlock(new Vector3($x-1, $y+2, $z), Block::get(90, 0));
+						$sender->sendMessage("Ignited portal!");
+				}
+		}				else {
+					$sender->sendMessage("You're not inside a portal");
+				}
+				if($this->isObsidian(new Vector3($x, $y-1, $z), $level)
+					and $this->isObsidian(new Vector3($x, $y-1, $z-1), $level)
+				    and $this->isObsidian(new Vector3($x, $y-1, $z-2), $level)
+					and $this->isObsidian(new Vector3($x, $y-1, $z+1), $level)
+					and $this->isObsidian(new Vector3($x, $y, $z+1), $level)
+					and $this->isObsidian(new Vector3($x, $y+1, $z+1), $level)
+					and $this->isObsidian(new Vector3($x, $y+2, $z+1), $level)
+					and $this->isObsidian(new Vector3($x, $y+3, $z+1), $level)
+					and $this->isObsidian(new Vector3($x, $y, $z-2), $level)
+					and $this->isObsidian(new Vector3($x, $y+1, $z-2), $level)
+					and $this->isObsidian(new Vector3($x, $y+2, $z-2), $level)
+					and $this->isObsidian(new Vector3($x, $y+3, $z-2), $level)
+					and $this->isObsidian(new Vector3($x, $y+4, $z), $level)
+					and $this->isObsidian(new Vector3($x, $y+4, $z-1), $level)
+				    and $this->isObsidian(new Vector3($x, $y+4, $z-2), $level)
+					and $this->isObsidian(new Vector3($x, $y+4, $z+1), $level))  {
+						$level->setBlock(new Vector3($x, $y, $z), Block::get(90, 0));
+						$level->setBlock(new Vector3($x, $y, $z-1), Block::get(90, 0));
+						$level->setBlock(new Vector3($x, $y+1, $z), Block::get(90, 0));
+						$level->setBlock(new Vector3($x, $y+1, $z-1), Block::get(90, 0));
+						$level->setBlock(new Vector3($x, $y+2, $z), Block::get(90, 0));
+						$level->setBlock(new Vector3($x, $y+2, $z-1), Block::get(90, 0));
+						$sender->sendMessage("Ingited portal!");
+				} else {
+					$sender->sendMessage("You're ot inside a portal");
+				}
+			}
 	}
 }
