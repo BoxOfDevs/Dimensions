@@ -29,11 +29,12 @@ class Main extends PluginBase implements Listener{
 	
     public function onInteract(PlayerInteractEvent $event) {
 		if($event->getItem() instanceof FlintSteel) {
+			$player = $event->getPlayer();
 			if ($event->getBlock()->getId() === 49) {
                     $poses = $this->getPoses($event->getBlock());
-					$level = $event->getPlayer()->getLevel();
+					$level = $player->getLevel();
 					$start = $poses[0];
-                    if ($start ===! $end) {
+					$end = $poses[1];
 						$xmin = $start->x;
 						$ymin = $start->y;
 						$zmin = $start->z;
@@ -42,14 +43,14 @@ class Main extends PluginBase implements Listener{
 						$z = $end->z;
 						for($xmin = $start->x; $xmin <= $x; $xmin++) {
 							for($ymin = $start->y; $ymin <= $y; $ymin++) {
-								for($z = $end->z; $zmin <= $z; $zmin++) {
-									if($level->getBlock(new Vector3($x, $y, $z))->getId() === 0) {
+								for($zmin = $end->z; $zmin <= $z; $zmin++) {
+									if($level->getBlock(new Vector3($xmin, $ymin, $zmin))->getId() === 0) {
 										$level->setBlock(new Vector3($xmin, $ymin, $zmin), Block::get(90, 0));
 									}
 								}
 							}
 						}
-					}
+						$event->setCancelled();
 			}
 		}
 	}
@@ -116,8 +117,8 @@ class Main extends PluginBase implements Listener{
 				for($xmin = $x - 45; $xmin <= $x + 45; $xmin++) {
 					for($ymin = $y - 45; $ymin <= $y + 45; $ymin++) {
 					   for($zmin = $z - 5; $zmin <= $z + 5; $zmin++) {
-					      if($this->getServer()->getDefaultLevel()->getBlock(new Vector3($x, $y, $z))->getId() === 90) {
-							  $xtp = $xmin;
+					      if($this->getServer()->getLevelByName("nether")->getBlock(new Vector3($xmin, $ymin, $zmin))->getId() === 90 and $this->getServer()->getLevelByName("nether")->getBlock(new Vector3($xmin + 1, $ymin - 1, $zmin))->getId() ===! 0) {
+							  $xtp = $xmin + 1;
 							  $ytp = $ymin;
 							  $ztp = $zmin;
 							  $newPortal = false;
@@ -126,30 +127,37 @@ class Main extends PluginBase implements Listener{
 				    }
 				}
 				if($newPortal ===! false) {
-					$xtp = $x;
-					$ytp = $y;
-					$ztp = $z;
-				for($xmin = $x - 5; $xmin <= $x + 5; $xmin++) {
-					for($ymin = $y - 5; $ymin <= $y + 5; $ymin++) {
+					for($xmin = $x - 45; $xmin <= $x + 45; $xmin++) {
+					for($ymin = $y - 45; $ymin <= $y + 45; $ymin++) {
 					   for($zmin = $z - 5; $zmin <= $z + 5; $zmin++) {
-					       $this->getServer()->getLevelByName("nether")->setBlock(new Vector3($xmin, $ymin, $zmin), Block::get(Block::AIR));
+					      if($this->getServer()->getLevelByName("nether")->getBlock(new Vector3($xmin, $ymin, $zmin))->getId() === 0 and $this->getServer()->getLevelByName("nether")->getBlock(new Vector3($xmin + 1, $ymin - 1, $zmin))->getId() ===! 0) {
+							  $xtp = $xmin + 1;
+							  $ytp = $ymin;
+							  $ztp = $zmin;
+						  }
 				        }
 				    }
 				}
-				$player->teleport(new Vector3($x, $y, $z));
-				$this->createPortal($this->getServer()->getLevelByName("nether"), new Vector3($x - 2, $y, $z));
+				if(!isset($xtp)) {
+					$xtp = $x;
+					$ytp = $y;
+					$ztp = $z;
+				}
+				$player->teleport(new Vector3($xtp, $ytp, $ztp));
+				$this->createPortal($this->getServer()->getLevelByName("nether"), new Vector3($xtp - 2, $ytp, $ztp));
 				} else {
 				$player->teleport(new Vector3($xtp, $ytp, $ztp));
 				}
 				$player->sendMessage("Switching to the nether...");
 				$this->players[$player->getName()] = "nether";
 			} elseif($this->players[$player->getName()] === "nether") {
+				$newPortal = true;
 				$this->switchLevel($player, $this->getServer()->getDefaultLevel());
 				for($xmin = $x - 45; $xmin <= $x + 45; $xmin++) {
 					for($ymin = $y - 45; $ymin <= $y + 45; $ymin++) {
 					   for($zmin = $z - 5; $zmin <= $z + 5; $zmin++) {
-					      if($this->getServer()->getDefaultLevel()->getBlock(new Vector3($x, $y, $z))->getId() === 90) {
-							  $xtp = $xmin;
+					      if($this->getServer()->getDefaultLevel()->getBlock(new Vector3($xmin, $ymin, $zmin))->getId() === 90 and $this->getServer()->getDefaultLevel()->getBlock(new Vector3($xmin + 1, $ymin - 1, $zmin))->getId() ===! 0) {
+							  $xtp = $xmin + 1;
 							  $ytp = $ymin;
 							  $ztp = $zmin;
 							  $newPortal = false;
@@ -158,18 +166,24 @@ class Main extends PluginBase implements Listener{
 				    }
 				}
 				if($newPortal ===! false) {
-					$xtp = $x;
-					$ytp = $y;
-					$ztp = $z;
-				for($xmin = $xtp - 5; $xmin <= $xtp + 5; $xmin++) {
-					for($ymin = $ytp; $ymin <= $ytp + 5; $ymin++) {
-					   for($zmin = $ztp - 5; $zmin <= $ztp + 5; $zmin++) {
-					       $this->getServer()->getDefaultLevel()->setBlock(new Vector3($xmin, $ymin, $zmin), Block::get(Block::AIR));
+					for($xmin = $x - 45; $xmin <= $x + 45; $xmin++) {
+					for($ymin = $y - 45; $ymin <= $y + 45; $ymin++) {
+					   for($zmin = $z - 5; $zmin <= $z + 5; $zmin++) {
+					      if($this->getServer()->getDefaultLevel()->getBlock(new Vector3($xmin, $ymin, $zmin))->getId() === 0 and $this->getServer()->getDefaultLevel()->getBlock(new Vector3($xmin + 1, $ymin - 1, $zmin))->getId() ===! 0) {
+							  $xtp = $xmin + 1;
+							  $ytp = $ymin;
+							  $ztp = $zmin;
+						  }
 				        }
 				    }
 				}
-				$player->teleport(new Vector3($x, $y, $z));
-				$this->createPortal($this->getServer()->getDefaultLevel(), new Vector3($x, $y, $z - 2));
+				if(!isset($xtp)) {
+					$xtp = $x;
+					$ytp = $y;
+					$ztp = $z;
+				}
+				$player->teleport(new Vector3($xtp, $ytp, $ztp));
+				$this->createPortal($this->getServer()->getDefaultLevel(), new Vector3($xtp, $ytp, $ztp - 2));
 				} else {
 				$player->teleport(new Vector3($xtp, $ytp, $ztp));
 				}
@@ -198,7 +212,7 @@ class Main extends PluginBase implements Listener{
 		// up side
 		$level->setBlock(new Vector3($x, $y+3, $z), Block::get(49, 0));
 		$level->setBlock(new Vector3($x, $y+3, $z-1), Block::get(49, 0));
-		$level->setBlock(new Vector3($x-2, $y+3, $z-2), Block::get(49, 0));
+		$level->setBlock(new Vector3($x, $y+3, $z-2), Block::get(49, 0));
 		$level->setBlock(new Vector3($x, $y+3, $z+1), Block::get(49, 0));
 		// portal blocks
 		$level->setBlock(new Vector3($x, $y, $z), Block::get(90, 0));
